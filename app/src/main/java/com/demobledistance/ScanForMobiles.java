@@ -11,6 +11,12 @@ import android.content.IntentFilter;
 import android.util.Base64;
 import android.util.Log;
 
+import com.goterl.lazycode.lazysodium.LazySodium;
+import com.goterl.lazycode.lazysodium.Sodium;
+import com.goterl.lazycode.lazysodium.exceptions.SodiumException;
+import com.goterl.lazycode.lazysodium.interfaces.SecretBox;
+import com.goterl.lazycode.lazysodium.utils.Key;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
@@ -68,5 +74,29 @@ public class ScanForMobiles {
         cookie.put("Timestamp", timestamp);
         
         return cookie;
+    }
+
+    private String encryptCookie(String key, JSONObject cookie) {
+
+        LazySodium ls = new LazySodium() {
+            @Override
+            public Sodium getSodium() {
+                return null;
+            }
+        };
+
+        byte[] nonce = ls.randomBytesBuf(SecretBox.NONCEBYTES);
+
+        try {
+            return ls.cryptoSecretBoxEasy(
+                cookie.toString(),
+                    nonce,
+                    Key.fromPlainString(key)
+            );
+        } catch (SodiumException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
